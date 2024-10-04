@@ -5,55 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{NAME}} - PhD Portfolio</title>
     <style>
-        /* Add your styles here */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+            margin: 0;
         }
         header {
-            background-image: url('{{BACKGROUND_IMAGE}}');
-            background-size: cover;
-            background-position: center;
-            color: white;
             text-align: center;
-            padding: 1rem;
+            padding: 2rem;
+            background-color: #f9f9f9;
         }
-        .profile-picture {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
+        header h1 {
+            font-size: 24px;
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+        header h2 {
+            font-size: 18px;
+            font-weight: normal;
+            margin: 0;
         }
         nav {
-            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
             padding: 1rem;
+            background-color: #f9f9f9;
         }
         nav a {
             color: #333;
             text-decoration: none;
-            padding: 0.5rem 1rem;
         }
         main {
             padding: 2rem;
         }
+        main h2 {
+            font-size: 20px;
+            margin-bottom: 1rem;
+        }
         footer {
             background-color: #333;
             color: white;
-            text-align: center;
-            padding: 1rem;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+        footer h3 {
+            font-size: 18px;
+            margin-bottom: 1rem;
+        }
+        footer p {
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+        footer a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
     <header>
-        <img src="{{PROFILE_PICTURE}}" alt="{{NAME}}" class="profile-picture">
         <h1>{{NAME}}</h1>
         <h2>{{TITLE}}</h2>
     </header>
     
     <nav>
-        {{NAVIGATION}}
+        <a href="#about">About</a>
+        <a href="#research">Research</a>
+        <a href="#publications">Publications</a>
+        <a href="#teaching">Teaching</a>
+        <a href="#projects">Projects</a>
     </nav>
     
     <main>
@@ -61,8 +87,6 @@
             <h2>About Me</h2>
             <p>{{ABOUT_ME}}</p>
         </section>
-        
-        <!-- Add more sections here for BACKGROUND, RESEARCH, PUBLICATIONS, TEACHING, PROJECTS -->
     </main>
     
     <footer>
@@ -91,8 +115,10 @@
         
         <div>
             <h3>Contact</h3>
-            <p>Email: {{EMAIL}}</p>
+            <p>{{EMAIL}}</p>
         </div>
     </footer>
 </body>
 </html>
+
+

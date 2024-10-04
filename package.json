@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "nodemon"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "execa": "^9.4.0",
     "express": "^4.21.0",
+    "nodemon": "^3.1.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

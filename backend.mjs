@@ -1,4 +1,3 @@
-
 import express from 'express';
 import { promises as fs } from 'fs'; // Using destructuring to access `fs.promises`
 import path from 'path';
@@ -7,13 +6,43 @@ import { execa } from 'execa';
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const PORT = process.env.PORT || 3000;
 const TEMPLATE_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'template.html');
 const OUTPUT_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'output.html');
+const IMAGES_DIR = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'portfolio_images/');
 
-async function uploadHtmlAndImagesToSSH(kerberosId, password, htmlContent, images) {
+async function saveBase64Image(base64Data, fileName) {
+  try {
+    // Create images directory if it doesn't exist
+    if (!fs.existsSync(IMAGES_DIR)) {
+      await fs.mkdir(IMAGES_DIR, { recursive: true });
+    }
+
+    // Extract the base64 data from the format `data:image/jpeg;base64,...`
+    const matches = base64Data.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
+    if (!matches) {
+      throw new Error('Invalid base64 string');
+    }
+    const buffer = Buffer.from(matches[2], 'base64');
+
+    // Construct the full path for the image file
+    const filePath = path.join(IMAGES_DIR, fileName);
+
+    // Write the image file to the local directory
+    await fs.writeFile(filePath, buffer);
+    console.log(`Saved image to ${filePath}`);
+    return filePath;
+  } catch (error) {
+    console.error(`Error saving image ${fileName}:`, error);
+    return null;
+  }
+}
+
+async function uploadHtmlAndImagesToSSH(kerberosId, password, htmlContent) {
   try {
     // Prepare SSH connection details
     const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
@@ -32,38 +61,38 @@ async function uploadHtmlAndImagesToSSH(kerberosId, password, htmlContent, image
     console.log('HTML file uploaded successfully to the SSH server.');
 
     // 2. Upload images using scp
-    for (const image of images) {
-      if (image.localPath) {
-        const scpCommand = `sshpass -p "${password}" scp ${image.localPath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/${image.serverFileName}`;
-        console.log(`Executing: ${scpCommand}`);
+    // for (const image of images) {
+    //   if (image.localPath) {
+    //     const scpCommand = `sshpass -p "${password}" scp ${image.localPath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/${image.serverFileName}`;
+    //     console.log(`Executing: ${scpCommand}`);
 
-        const { stdout: scpOutput, stderr: scpError } = await execa(scpCommand, { shell: true });
-        console.log(scpOutput); // For debugging
+    //     const { stdout: scpOutput, stderr: scpError } = await execa(scpCommand, { shell: true });
+    //     console.log(scpOutput); // For debugging
 
-        if (scpError) {
-          console.error(`Failed to upload image ${image.localPath}:`, scpError);
-        } else {
-          console.log(`Image uploaded successfully: ${image.serverFileName}`);
-        }
-      }
-    }
+    //     if (scpError) {
+    //       console.error(`Failed to upload image ${image.localPath}:`, scpError);
+    //     } else {
+    //       console.log(`Image uploaded successfully: ${image.serverFileName}`);
+    //     }
+    //   }
+    // }
   } catch (error) {
     console.error('Error during SSH upload:', error.message);
   }
 }
 
-app.post('/api/updatePortfolio', async (req, res) => {
+app.post('/updatePortfolio', async (req, res) => {
   try {
-    const portfolioData = req.body;
+    const portfolioData = req.body.portfolio;
 
     // Read the template file
     let template = await fs.readFile(TEMPLATE_PATH, 'utf-8');
 
     // Replace placeholders with actual data
-    template = template.replace('{{NAME}}', portfolioData.header.name);
+    template = template.replace(/{{NAME}}/g, portfolioData.header.name);
     template = template.replace('{{TITLE}}', portfolioData.header.title);
-    template = template.replace('{{PROFILE_PICTURE}}', portfolioData.header.profilePicture);
-    template = template.replace('{{BACKGROUND_IMAGE}}', portfolioData.header.backgroundImage);
+    template = template.replace('{{PROFILE_PICTURE}}', 'profile0.jpeg');
+    template = template.replace('{{BACKGROUND_IMAGE}}', 'background.jpeg');
 
     // Navigation
     let navHtml = portfolioData.navigation.map(item => `<a href="#${item.toLowerCase()}">${item}</a>`).join('\n');
@@ -92,17 +121,17 @@ app.post('/api/updatePortfolio', async (req, res) => {
     // Email
     template = template.replace('{{EMAIL}}', portfolioData.email);
 
-    // Write the updated content to the output file
-    await fs.writeFile(OUTPUT_PATH, template);
+    // Save images locally and update paths in the `images` array
+    // const profilePicturePath = await saveBase64Image(portfolioData.header.profilePicture, 'profile0.jpeg');
+    // const backgroundImagePath = await saveBase64Image(portfolioData.header.backgroundImage, 'background.jpeg');
 
-    // List of images to upload
-    const images = [
-      { localPath: portfolioData.header.profilePicture, serverFileName: 'profile0.jpeg' },
-      { localPath: portfolioData.header.backgroundImage, serverFileName: 'background.jpeg' }
-    ];
+    // const images = [
+    //   { localPath: profilePicturePath, serverFileName: 'profile0.jpeg' },
+    //   { localPath: backgroundImagePath, serverFileName: 'background.jpeg' }
+    // ];
 
     // Upload HTML and images to SSH server
-    await uploadHtmlAndImagesToSSH(req.body.kerberos, req.body.password, template, images);
+    await uploadHtmlAndImagesToSSH(req.body.kerberos, req.body.password, template);
 
     res.json({ message: 'Portfolio updated successfully' });
   } catch (error) {
