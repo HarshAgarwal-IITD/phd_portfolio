@@ -3,6 +3,15 @@ import { promises as fs } from 'fs'; // Using destructuring to access `fs.promis
 import path from 'path';
 import cors from 'cors';
 import { execa } from 'execa';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Convert import.meta.url to a file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+
 
 
 const app = express();
@@ -12,12 +21,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const PORT = process.env.PORT || 3000;
-const ABOUT_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'aboutTemplate.html');
-const HEADER_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'headerTemplate.html');
-const FOOTER_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'footerTemplate.html');
-const PUBLICATIONS_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'publicationsTemplate.html');
-const OUTPUT_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'output.html');
-const IMAGES_DIR = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'portfolio_images/');
+const ABOUT_PATH = path.join(__dirname, 'aboutTemplate.html');
+const FOOTER_PATH = path.join(__dirname, 'footerTemplate.html');
+const HEADER_PATH = path.join(__dirname, 'headerTemplate.html');
+const PUBLICATIONS_PATH = path.join(__dirname, 'publicationsTemplate.html');
+const OUTPUT_PATH = path.join(__dirname, 'output.html');
+const IMAGES_DIR = path.join(__dirname, 'portfolio_images/');
 
 async function createAboutPage(header , footer , portfolio){
   let aboutTemplate = await fs.readFile(ABOUT_PATH,'utf-8');
@@ -248,42 +257,6 @@ app.post('/updatePortfolio', async (req, res) => {
     res.status(500).json({ error: error.message || 'Failed to update portfolio' });
   }
 });
-// app.post('/updatePortfolio', async (req, res) => {
- 
-//   try {
-    
-//     const data = req.body;
-//     const portfolioData =data.portfolio;
-//     const publicationsData =data.publications;
-//     const footer = createFooter({
-//       researchAdvisor: portfolioData.researchAdvisor,
-//       researchLab: portfolioData.researchLab,
-//       socialMedia: portfolioData.socialMedia,
-//       email: portfolioData.email
-//     });
-//     const header = createHeader({name: portfolioData.name, title: portfolioData.title})
-//     const aboutPage = createAboutPage(header , footer , portfolioData);
-//     const publicationsPage = creatPublicationsPage(header , footer , publicationsData);
-//     const pages ={aboutPage:aboutPage , publicationsPage:publicationsPage}
-   
-    
-//     // Upload HTML and images to SSH server
-//     const response = await uploadHtmlAndImagesToSSH(req.body.kerberos, req.body.password, pages, portfolioData);
-//     if(response.ok){
-
-//     res.json({ message: 'Portfolio updated successfully' });
-     
-//     }
-//     else
-//   {
-//     console.error('Error updating portfolio:');
-//     res.status(500).json({ error: 'Failed to update portfolio' });
-//   }
-//   } catch (error) {
-//     console.error('Error updating portfolio:', error);
-//     res.status(500).json({ error: 'Failed to update portfolio' });
-//   }
-// });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
