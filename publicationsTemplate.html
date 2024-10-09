@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publications Template</title>
+    <style>
+        /* Reset default margin and padding, set height to full screen */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%; /* Ensure full viewport height */
+            width: 100%; /* Ensure full viewport width */
+            overflow-x: hidden; /* Disable horizontal scrolling */
+            font-family: Arial, sans-serif;
+        }
+
+        /* Body and container */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Ensures footer stays at the bottom */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        header h2 {
+            font-size: 18px;
+            font-weight: normal;
+            margin: 0;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        /* Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            flex: 1; /* Take up all available space */
+            padding: 0 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-y: auto; /* Enable vertical scrolling if necessary */
+        }
+
+        .content {
+            width: 100%;
+            
+            padding: 2rem;
+            box-sizing: border-box;
+            flex: 1; /* Ensure the content area grows to fill the space */
+            
+        }
+
+        .main-content {
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .section {
+            min-height: 150px;
+            margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer h3 {
+            font-size: 18px;
+            margin-bottom: 1rem;
+        }
+
+        footer p {
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+  {header}
+    <!-- Main Container -->
+    <div class="container">
+        <div class="content">
+            <div class="main-content">
+
+                <div class="section" id="journals">
+                    <h2>Journals</h2>
+                   {journal}
+                </div>
+
+                <div class="section" id="conferences">
+                    <h2>Conferences</h2>
+                    {conference}
+                </div>
+            </div>
+        </div>
+    </div>
+
+   {footer}
+      
+</body>
+</html>

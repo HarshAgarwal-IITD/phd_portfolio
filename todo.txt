@@ -1,0 +1,8 @@
+done- created publications page
+done - created header footer and environment portfolio
+done -login functionality and routing of pages
+
+done- connect backend for publications
+todo-upload json for publications 
+todo-fetch publications data for login
+todo - create other pages

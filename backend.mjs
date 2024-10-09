@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import { execa } from 'execa';
 
+
 const app = express();
 app.use(cors());
 
@@ -11,134 +12,278 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const PORT = process.env.PORT || 3000;
-const TEMPLATE_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'template.html');
+const ABOUT_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'aboutTemplate.html');
+const HEADER_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'headerTemplate.html');
+const FOOTER_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'footerTemplate.html');
+const PUBLICATIONS_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'publicationsTemplate.html');
 const OUTPUT_PATH = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'output.html');
 const IMAGES_DIR = path.join("/home/jdppc01/Desktop/phd_portfolio/mvp/", 'portfolio_images/');
 
-async function saveBase64Image(base64Data, fileName) {
-  try {
-    // Create images directory if it doesn't exist
-    if (!fs.existsSync(IMAGES_DIR)) {
-      await fs.mkdir(IMAGES_DIR, { recursive: true });
-    }
+async function createAboutPage(header , footer , portfolio){
+  let aboutTemplate = await fs.readFile(ABOUT_PATH,'utf-8');
 
-    // Extract the base64 data from the format `data:image/jpeg;base64,...`
-    const matches = base64Data.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
-    if (!matches) {
-      throw new Error('Invalid base64 string');
-    }
-    const buffer = Buffer.from(matches[2], 'base64');
+  const about = aboutTemplate
+  .replace('{{ABOUT_ME}}', portfolio.aboutMe)
+  .replace("{{HEADER}}",header)
+  .replace("{{FOOTER}}",footer)
+  ;
+  return about
+}
+const createJournalEntry = (journal) => `
+  <p style="margin-bottom: 1rem">
+    ${journal.authors} ${journal.year ? `(${journal.year})` : ''}. 
+    ${journal.title}. <i>${journal.journal}</i>
+    ${journal.volume ? `, ${journal.volume}` : ''}
+    ${journal.pages ? `, ${journal.pages}` : ''}.
+    ${journal.link ? `<a href="${journal.link}" style="color: #007bff; text-decoration: none"> Link</a>` : ''}
+  </p>
+`;
 
-    // Construct the full path for the image file
-    const filePath = path.join(IMAGES_DIR, fileName);
+const createConferenceEntry = (conference) => `
+  <p style="margin-bottom: 1rem">
+    ${conference.authors} ${conference.year ? `(${conference.year})` : ''}. 
+    ${conference.title}. <i>${conference.conference}</i>
+    ${conference.location ? `, ${conference.location}` : ''}.
+    ${conference.link ? `<a href="${conference.link}" style="color: #007bff; text-decoration: none"> Link</a>` : ''}
+  </p>
+`;
+async function creatPublicationsPage(header , footer ,publicationsData){
+  let publicationsTemplate = await fs.readFile(PUBLICATIONS_PATH,'utf-8');
+  const journalEntries = publicationsData.journals
+    .map(journal => createJournalEntry(journal))
+    .join('');
 
-    // Write the image file to the local directory
-    await fs.writeFile(filePath, buffer);
-    console.log(`Saved image to ${filePath}`);
-    return filePath;
-  } catch (error) {
-    console.error(`Error saving image ${fileName}:`, error);
-    return null;
-  }
+  const conferenceEntries = publicationsData.conferences
+    .map(conference => createConferenceEntry(conference))
+    .join('');
+
+  return publicationsTemplate
+    .replace('{journal}', journalEntries || '<p>No journal publications yet.</p>')
+    .replace('{conference}', conferenceEntries || '<p>No conference publications yet.</p>')
+    .replace('{header}',header)
+    .replace('{footer}',footer);
+};
+
+
+async function createHeader(headerData){
+  let headerTemplate =await fs.readFile(HEADER_PATH , 'utf-8');
+
+ 
+
+
+return  headerTemplate
+.replace('{{NAME}}', headerData.name || 'Your Name')
+.replace('{{TITLE}}', headerData.title || 'Your Title');
+
+}
+async function createFooter(footer){
+  let footerTemplate = await fs.readFile(FOOTER_PATH, 'utf-8');
+
+
+  
+
+return footerTemplate
+.replace('{{ADVISOR_NAME}}', footer.researchAdvisor.name || '')
+.replace('{{ADVISOR_TITLE}}', footer.researchAdvisor.title || '')
+.replace('{{ADVISOR_DEPARTMENT}}', footer.researchAdvisor.department || '')
+.replace('{{ADVISOR_INSTITUTION}}', footer.researchAdvisor.institution || '')
+.replace('{{LAB_NAME}}', footer.researchLab.name || '')
+.replace('{{LAB_DEPARTMENT}}', footer.researchLab.department || '')
+.replace('{{LAB_INSTITUTION}}', footer.researchLab.institution || '')
+.replace('{{LAB_ADDRESS}}', footer.researchLab.address || '')
+.replace('{{GITHUB_URL}}', footer.socialMedia.github || '#')
+.replace('{{TWITTER_URL}}', footer.socialMedia.twitter || '#')
+.replace('{{LINKEDIN_URL}}', footer.socialMedia.linkedin || '#')
+.replace('{{EMAIL}}', footer.email || '');;
+
 }
 
-async function uploadHtmlAndImagesToSSH(kerberosId, password, htmlContent) {
-  try {
-    // Prepare SSH connection details
-    const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
 
-    // 1. Upload the HTML file to the server
-    const { stdout: sshOutput, stderr: sshError } = await execa(
-      `${sshCommand} "cd ~ && mkdir -p private_html && cd private_html && touch index.html && echo '${htmlContent}' > index.html"`,
-      { shell: true }
-    );
+async function getCurrentJson(kerberosId , password){
 
-    console.log(sshOutput); // For debugging
-    if (sshError) {
-      console.error(sshError);
+    try {
+      // Prepare the SSH command to read jsonData.json file from the remote server
+      const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in "cat private_html/jsonData.json"`;
+  
+      // Execute the SSH command to fetch the file content directly
+      const { stdout: fileContent, stderr: sshError } = await execa(sshCommand, { shell: true });
+     console.log(fileContent);
+      // Check for any error during SSH execution
+      if (sshError) {
+        console.error('Error fetching the file:', sshError);
+        return { ok: false, error: sshError };
+      }
+  
+      // Parse the output (fileContent) as JSON
+      const jsonData = JSON.parse(fileContent);
+  
+      // Return the parsed JSON data
+      return { ok: true, data: jsonData };
+    } catch (error) {
+      console.error('Error during SSH fetch:', error.message);
+      return { ok: false, error: error.message };
     }
-
-    console.log('HTML file uploaded successfully to the SSH server.');
-
-    // 2. Upload images using scp
-    // for (const image of images) {
-    //   if (image.localPath) {
-    //     const scpCommand = `sshpass -p "${password}" scp ${image.localPath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/${image.serverFileName}`;
-    //     console.log(`Executing: ${scpCommand}`);
-
-    //     const { stdout: scpOutput, stderr: scpError } = await execa(scpCommand, { shell: true });
-    //     console.log(scpOutput); // For debugging
-
-    //     if (scpError) {
-    //       console.error(`Failed to upload image ${image.localPath}:`, scpError);
-    //     } else {
-    //       console.log(`Image uploaded successfully: ${image.serverFileName}`);
-    //     }
-    //   }
-    // }
-  } catch (error) {
-    console.error('Error during SSH upload:', error.message);
   }
-}
+  
+
+
+
+
+
+  async function uploadHtmlAndImagesToSSH(kerberosId, password, pages, jsonData) {
+    try {
+      // Prepare SSH connection details
+      const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
+  
+      console.log('Processing...');
+  
+      // Create directory and upload HTML files
+      const { stdout: sshOutput, stderr: sshError } = await execa(
+        `${sshCommand} "cd ~ && mkdir -p private_html && cd private_html && touch index.html && echo '${pages.aboutPage}' > index.html && touch publications.html && echo '${pages.publicationsPage}' > publications.html
+       " ` ,
+        { shell: true }
+      );
+      console.log(sshOutput); // For debugging
+  
+      if (sshError) {
+        console.error(sshError);
+      }
+      const { stdout: sshOutput1, stderr: sshError1 } = await execa(
+        `${sshCommand} "cd ~ && mkdir -p private_html && touch publications.html && echo '${pages.publicationsPage}' > publications.html
+       " ` ,
+        { shell: true }
+      );
+  
+     
+      console.log(sshOutput1); // For debugging
+  
+      if (sshError1) {
+        console.error(sshError);
+      }
+  
+      console.log('HTML files uploaded successfully to the SSH server.');
+  
+      // 2. Convert jsonData to a JSON string format
+      const jsonDataString = JSON.stringify(jsonData).replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  
+      // Prepare the command to upload JSON data
+
+  
+      // Execute the command to upload JSON file
+      const { stdout: jsonStdout, stderr: jsonStderr } = await execa(
+         `${sshCommand} "cd ~/private_html && 
+        echo '${jsonDataString}' > jsonData.json "`,
+        { shell: true }
+      );
+      console.log(jsonStdout); // For debugging
+  
+      if (jsonStderr) {
+        console.error(jsonStderr);
+      }
+  
+      console.log('jsonData.json file uploaded successfully to the SSH server.');
+      return { ok: true };
+    } catch (error) {
+      console.error('Error during SSH upload:', error.message);
+      return { ok: false, error: error.message };
+    }
+  }
+ 
+  
+
+
+app.post('/login', async (req ,res)=>{
+ 
+  const {kerberos , password} = req.body;
+
+  const response =await getCurrentJson(kerberos, password);
+  console.log(response)
+  console.log(typeof response)
+  if(response.ok){
+    res.status(200).json({msg:"ok",data:response.data})
+    
+  }
+  else{
+    res.json({msg:'error'});
+  }
+
+})
 
 app.post('/updatePortfolio', async (req, res) => {
   try {
-    const portfolioData = req.body.portfolio;
+    const { portfolio: portfolioData, publications: publicationsData, kerberos, password } = req.body;
 
-    // Read the template file
-    let template = await fs.readFile(TEMPLATE_PATH, 'utf-8');
+    // Ensure all these functions return promises
+    const [header, footer] = await Promise.all([
+      createHeader({name: portfolioData.header.name, title: portfolioData.header.title}),
+      createFooter({
+        researchAdvisor: portfolioData.researchAdvisor,
+        researchLab: portfolioData.researchLab,
+        socialMedia: portfolioData.socialMedia,
+        email: portfolioData.email
+      })
+    ]);
 
-    // Replace placeholders with actual data
-    template = template.replace(/{{NAME}}/g, portfolioData.header.name);
-    template = template.replace('{{TITLE}}', portfolioData.header.title);
-    template = template.replace('{{PROFILE_PICTURE}}', 'profile0.jpeg');
-    template = template.replace('{{BACKGROUND_IMAGE}}', 'background.jpeg');
+    const [aboutPage, publicationsPage] = await Promise.all([
+      createAboutPage(header, footer, portfolioData),
+      creatPublicationsPage(header, footer, publicationsData)
+    ]);
+    
 
-    // Navigation
-    let navHtml = portfolioData.navigation.map(item => `<a href="#${item.toLowerCase()}">${item}</a>`).join('\n');
-    template = template.replace('{{NAVIGATION}}', navHtml);
-
-    // About Me
-    template = template.replace('{{ABOUT_ME}}', portfolioData.aboutMe);
-
-    // Research Advisor
-    template = template.replace('{{ADVISOR_NAME}}', portfolioData.researchAdvisor.name);
-    template = template.replace('{{ADVISOR_TITLE}}', portfolioData.researchAdvisor.title);
-    template = template.replace('{{ADVISOR_DEPARTMENT}}', portfolioData.researchAdvisor.department);
-    template = template.replace('{{ADVISOR_INSTITUTION}}', portfolioData.researchAdvisor.institution);
-
-    // Research Lab
-    template = template.replace('{{LAB_NAME}}', portfolioData.researchLab.name);
-    template = template.replace('{{LAB_DEPARTMENT}}', portfolioData.researchLab.department);
-    template = template.replace('{{LAB_INSTITUTION}}', portfolioData.researchLab.institution);
-    template = template.replace('{{LAB_ADDRESS}}', portfolioData.researchLab.address);
-
-    // Social Media
-    template = template.replace('{{GITHUB_URL}}', portfolioData.socialMedia.github);
-    template = template.replace('{{TWITTER_URL}}', portfolioData.socialMedia.twitter);
-    template = template.replace('{{LINKEDIN_URL}}', portfolioData.socialMedia.linkedin);
-
-    // Email
-    template = template.replace('{{EMAIL}}', portfolioData.email);
-
-    // Save images locally and update paths in the `images` array
-    // const profilePicturePath = await saveBase64Image(portfolioData.header.profilePicture, 'profile0.jpeg');
-    // const backgroundImagePath = await saveBase64Image(portfolioData.header.backgroundImage, 'background.jpeg');
-
-    // const images = [
-    //   { localPath: profilePicturePath, serverFileName: 'profile0.jpeg' },
-    //   { localPath: backgroundImagePath, serverFileName: 'background.jpeg' }
-    // ];
+    const pages = {aboutPage, publicationsPage};
+    
+    // Send a preliminary response to prevent timeout
+    
 
     // Upload HTML and images to SSH server
-    await uploadHtmlAndImagesToSSH(req.body.kerberos, req.body.password, template);
-
-    res.json({ message: 'Portfolio updated successfully' });
+    const response = await uploadHtmlAndImagesToSSH(kerberos, password, pages, portfolioData);
+    
+    if (response.ok) {
+     res.json('portfolio update success')
+    } else {
+      throw new Error(response.error || 'Failed to update portfolio');
+    }
   } catch (error) {
     console.error('Error updating portfolio:', error);
-    res.status(500).json({ error: 'Failed to update portfolio' });
+    res.status(500).json({ error: error.message || 'Failed to update portfolio' });
   }
 });
+// app.post('/updatePortfolio', async (req, res) => {
+ 
+//   try {
+    
+//     const data = req.body;
+//     const portfolioData =data.portfolio;
+//     const publicationsData =data.publications;
+//     const footer = createFooter({
+//       researchAdvisor: portfolioData.researchAdvisor,
+//       researchLab: portfolioData.researchLab,
+//       socialMedia: portfolioData.socialMedia,
+//       email: portfolioData.email
+//     });
+//     const header = createHeader({name: portfolioData.name, title: portfolioData.title})
+//     const aboutPage = createAboutPage(header , footer , portfolioData);
+//     const publicationsPage = creatPublicationsPage(header , footer , publicationsData);
+//     const pages ={aboutPage:aboutPage , publicationsPage:publicationsPage}
+   
+    
+//     // Upload HTML and images to SSH server
+//     const response = await uploadHtmlAndImagesToSSH(req.body.kerberos, req.body.password, pages, portfolioData);
+//     if(response.ok){
+
+//     res.json({ message: 'Portfolio updated successfully' });
+     
+//     }
+//     else
+//   {
+//     console.error('Error updating portfolio:');
+//     res.status(500).json({ error: 'Failed to update portfolio' });
+//   }
+//   } catch (error) {
+//     console.error('Error updating portfolio:', error);
+//     res.status(500).json({ error: 'Failed to update portfolio' });
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
