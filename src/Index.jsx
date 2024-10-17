@@ -8,6 +8,7 @@ import Publications from './Publications'; // Publications
 import Teaching from './Teaching';  // Teaching
 import Projects from './Projects';  // Projects
 import { PortfolioProvider } from './PortfolioContext';
+import Background from './Background';
 
 export default function Index() {
   // Your existing state and methods
@@ -26,6 +27,7 @@ export default function Index() {
           <Route path="/publications" element={<Publications />} />
           <Route path="/teaching" element={<Teaching />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/background" element={<Background />} />
         </Routes>
       </div>
     </Router>

@@ -55,6 +55,21 @@ export const PortfolioProvider = ({ children }) => {
       }
     ]
   });
+  
+  const [background, setBackground] = useState({
+    education: [
+      { degree: '', department: '', institution: '', year: '', details: '' }
+    ],
+    workExperience: [
+      { title: '', company: '', duration: '', location: '', description: '' }
+    ],
+    internships: [
+      { role: '', company: '', duration: '', location: '', description: '' }
+    ]
+  });
+  
+
+
 
   return (
     <PortfolioContext.Provider 
@@ -62,7 +77,9 @@ export const PortfolioProvider = ({ children }) => {
         portfolio, 
         setPortfolio,
         publications,
-        setPublications
+        setPublications,
+        background,
+        setBackground
       }}
     >
       {children}

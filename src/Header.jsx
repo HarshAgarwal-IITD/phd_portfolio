@@ -38,6 +38,7 @@ function Header(){
             {portfolio.navigation.map((item, index) => (
               <a 
                 key={index}
+                
                 href={`#${item.toLowerCase()}`}
                 style={{
                   color: '#333',

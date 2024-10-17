@@ -25,8 +25,7 @@ const ABOUT_PATH = path.join(__dirname, 'aboutTemplate.html');
 const FOOTER_PATH = path.join(__dirname, 'footerTemplate.html');
 const HEADER_PATH = path.join(__dirname, 'headerTemplate.html');
 const PUBLICATIONS_PATH = path.join(__dirname, 'publicationsTemplate.html');
-const OUTPUT_PATH = path.join(__dirname, 'output.html');
-const IMAGES_DIR = path.join(__dirname, 'portfolio_images/');
+
 
 async function createAboutPage(header , footer , portfolio){
   let aboutTemplate = await fs.readFile(ABOUT_PATH,'utf-8');
@@ -134,12 +133,7 @@ async function getCurrentJson(kerberosId , password){
     }
   }
   
-
-
-
-
-
-  async function uploadHtmlAndImagesToSSH(kerberosId, password, pages, jsonData) {
+  async function uploadHtmlToSSH(kerberosId, password, pages, jsonData) {
     try {
       // Prepare SSH connection details
       const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
@@ -206,8 +200,7 @@ app.post('/login', async (req ,res)=>{
   const {kerberos , password} = req.body;
 
   const response =await getCurrentJson(kerberos, password);
-  console.log(response)
-  console.log(typeof response)
+ 
   if(response.ok){
     res.status(200).json({msg:"ok",data:response.data})
     
@@ -245,7 +238,7 @@ app.post('/updatePortfolio', async (req, res) => {
     
 
     // Upload HTML and images to SSH server
-    const response = await uploadHtmlAndImagesToSSH(kerberos, password, pages, portfolioData);
+    const response = await uploadHtmlToSSH(kerberos, password, pages,{publicationsData , portfolioData});
     
     if (response.ok) {
      res.json('portfolio update success')

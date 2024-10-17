@@ -18,6 +18,7 @@ function  Navbar(){
       
     }}>
       <Link to="/" style={{ margin: '0 1rem', textDecoration: 'none', color: '#333' }}>About</Link>
+      <Link to="/background" style={{ margin: '0 1rem', textDecoration: 'none', color: '#333' }}>Background</Link>
       <Link to="/research" style={{ margin: '0 1rem', textDecoration: 'none', color: '#333' }}>Research</Link>
       <Link to="/publications" style={{ margin: '0 1rem', textDecoration: 'none', color: '#333' }}>Publications</Link>
       <Link to="/teaching" style={{ margin: '0 1rem', textDecoration: 'none', color: '#333' }}>Teaching</Link>
