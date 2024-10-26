@@ -5,7 +5,7 @@ import { usePortfolio } from './PortfolioContext';
 
 function Login() {
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
-  const {setPublications , setPortfolio}=usePortfolio();
+  const {setPublications , setPortfolio,setBackground , setTeaching}=usePortfolio();
 
   async function handleLogin(kerberos, password) {
     
@@ -28,6 +28,8 @@ function Login() {
       if (response.ok) {
         setPortfolio(jsonData.data.portfolioData); // Set portfolio data in parent component
         setPublications(jsonData.data.publicationsData)
+        setBackground(jsonData.data.backgroundData)
+        setTeaching(jsonData.data.teachingData)
         return 'Portfolio fetched successfully!';
       } else {
         return data.error || 'Failed to fetch portfolio';

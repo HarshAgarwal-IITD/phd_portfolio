@@ -25,6 +25,121 @@ const ABOUT_PATH = path.join(__dirname, 'aboutTemplate.html');
 const FOOTER_PATH = path.join(__dirname, 'footerTemplate.html');
 const HEADER_PATH = path.join(__dirname, 'headerTemplate.html');
 const PUBLICATIONS_PATH = path.join(__dirname, 'publicationsTemplate.html');
+const BACKGROUND_PATH = path.join(__dirname, 'backgroundTemplate.html');
+const TEACHING_PATH = path.join(__dirname, 'teachingTemplate.html');
+
+async function createBackgroundPage(backgroundData, header, footer) {
+  const backgroundTemplate = await fs.readFile(BACKGROUND_PATH, 'utf-8');
+  
+  // Generate education entries HTML
+  const educationHtml = backgroundData.educationalBackground.filter(edu => edu.degree || edu.institution).map(edu => `
+    <div class="entry">
+      <h3>${edu.degree}</h3>
+      <p>${edu.department}, ${edu.institution} (${edu.year})</p>
+      ${edu.details ? `<p>${edu.details}</p>` : ''}
+    </div>
+  `).join('') || "";
+
+  // Generate achievements HTML
+  const achievementsHtml = backgroundData.achievements.length ? `
+    <h2>Achievements & Awards</h2>
+    <ul>
+      ${backgroundData.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
+    </ul>
+  ` : '';
+
+  // Generate work experience HTML
+  const workHtml = backgroundData.workExperience.filter(work => work.title || work.company).map(work => `
+    <div class="entry">
+      <h3>${work.title}</h3>
+      <p>${work.company}, ${work.location}</p>
+      <p>${work.duration}</p>
+      ${Array.isArray(work.description) 
+        ? `<ul>${work.description.map(desc => `<li>${desc}</li>`).join('')}</ul>`
+        : work.description ? `<p>${work.description}</p>` : ''}
+    </div>
+  `).join('') || '<p>No work experience yet.</p>';
+
+  // Generate internships HTML
+  const internshipsHtml = backgroundData.internships.filter(internship => internship.role || internship.company).map(internship => `
+    <div class="entry">
+      <h3>${internship.role}</h3>
+      <p>${internship.company}, ${internship.location}</p>
+      <p>${internship.duration}</p>
+      ${Array.isArray(internship.description)
+        ? `<ul>${internship.description.map(desc => `<li>${desc}</li>`).join('')}</ul>`
+        : internship.description ? `<p>${internship.description}</p>` : ''}
+    </div>
+  `).join('') || '<p>No internships yet.</p>';
+
+  // Generate skills HTML
+  const skillsHtml = `
+   
+      ${backgroundData.researchSkills.length ? `
+        <h2>Research Skills</h2>
+        ${backgroundData.researchSkills.map(skill => `
+          <div class="entry">
+            <h3>${skill.skill ? skill.skill+'' : ''}</h3>
+            <p>${skill.description ? skill.description+'' : '' }</p>
+          </div>
+        `).join('')}
+      ` : ''}
+      ${backgroundData.otherSkills.length ? `
+        <h2>Other Skills</h2>
+        ${backgroundData.otherSkills.map(skill => `
+          <div class="entry">
+            <h3>${skill.skill ? skill.skill+'' : '' }  </h3>
+            <p>${skill.description ? skill.description+'' : ''}</p>
+          </div>
+        `).join('')}
+      ` : ''}
+   
+  ` || '<p>No skills listed yet.</p>';
+  console.log(skillsHtml)
+
+  // Replace all placeholders in the template
+  return backgroundTemplate
+    .replace('{header}', header)
+    .replace('{footer}', footer)
+    .replace('{educationalBackground}', educationHtml)
+    .replace('{achievementsAndAwards}', achievementsHtml)
+    .replace('{workExperience}', workHtml)
+    .replace('{internships}', internshipsHtml)
+    .replace('{skills}', skillsHtml);
+}
+
+
+
+async function createTeachingPage(header , footer , teaching){
+  const teachingTemplate = await fs.readFile(TEACHING_PATH, 'utf-8');
+  
+  // Generate education entries HTML
+  const lecturesHtml = teaching.lectures.filter(edu => edu.title || edu.description).map(edu => `
+    <div class="entry">
+      <h3>${edu.title}</h3>
+      <p>${edu.description}</p>
+     
+    </div>
+  `).join('') || "";
+
+  // Generate achievements HTML
+  const mentorshipsHtml = teaching.mentorships.filter(edu => edu.title || edu.description).map(edu => `
+    <div class="entry">
+      <h3>${edu.title}</h3>
+      <p>${edu.description}</p>
+     
+    </div>
+  `).join('') || "";
+
+  // Generate work experience HTML
+ 
+  return teachingTemplate
+    .replace('{header}', header)
+    .replace('{footer}', footer)
+    .replace('{lectures}', lecturesHtml)
+    .replace('{mentorship}',mentorshipsHtml)
+   
+}
 
 
 async function createAboutPage(header , footer , portfolio){
@@ -115,7 +230,7 @@ async function getCurrentJson(kerberosId , password){
   
       // Execute the SSH command to fetch the file content directly
       const { stdout: fileContent, stderr: sshError } = await execa(sshCommand, { shell: true });
-     console.log(fileContent);
+     
       // Check for any error during SSH execution
       if (sshError) {
         console.error('Error fetching the file:', sshError);
@@ -161,9 +276,40 @@ async function getCurrentJson(kerberosId , password){
       console.log(sshOutput1); // For debugging
   
       if (sshError1) {
-        console.error(sshError);
+        console.error(sshError1);
       }
+
+      let tempFilePath = path.join(__dirname, 'backgroundOutput.html');
+      await fs.writeFile(tempFilePath, pages.backgroundPage, 'utf8');
   
+      // Use scp to transfer the file to the remote server
+      let scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/background.html`;
+      const { stdout: sshOutput2, stderr: sshError2 }= await execa(scpCommand, { shell: true });
+      
+  
+     
+      console.log(sshOutput2); // For debugging
+  
+      if (sshError2) {
+        console.error(sshError2);
+      }
+
+      //upload teaching page
+  
+       tempFilePath = path.join(__dirname, 'teachingOutput.html');
+      await fs.writeFile(tempFilePath, pages.teachingPage, 'utf8');
+  
+      // Use scp to transfer the file to the remote server
+       scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/teaching.html`;
+      const { stdout: sshOutput3, stderr: sshError3 }= await execa(scpCommand, { shell: true });
+      
+  
+     
+      console.log(sshOutput3); // For debugging
+  
+      if (sshError3) {
+        console.error(sshError3);
+      }
       console.log('HTML files uploaded successfully to the SSH server.');
   
       // 2. Convert jsonData to a JSON string format
@@ -213,7 +359,7 @@ app.post('/login', async (req ,res)=>{
 
 app.post('/updatePortfolio', async (req, res) => {
   try {
-    const { portfolio: portfolioData, publications: publicationsData, kerberos, password } = req.body;
+    const { portfolio: portfolioData, publications: publicationsData,background :backgroundData ,teaching:teachingData, kerberos, password } = req.body;
 
     // Ensure all these functions return promises
     const [header, footer] = await Promise.all([
@@ -226,19 +372,21 @@ app.post('/updatePortfolio', async (req, res) => {
       })
     ]);
 
-    const [aboutPage, publicationsPage] = await Promise.all([
+    const [aboutPage, publicationsPage , backgroundPage,teachingPage] = await Promise.all([
       createAboutPage(header, footer, portfolioData),
-      creatPublicationsPage(header, footer, publicationsData)
+      creatPublicationsPage(header, footer, publicationsData),
+      createBackgroundPage(backgroundData ,header , footer),
+      createTeachingPage(header,footer , teachingData)
     ]);
     
 
-    const pages = {aboutPage, publicationsPage};
+    const pages = {aboutPage, publicationsPage , backgroundPage, teachingPage};
     
     // Send a preliminary response to prevent timeout
     
 
     // Upload HTML and images to SSH server
-    const response = await uploadHtmlToSSH(kerberos, password, pages,{publicationsData , portfolioData});
+    const response = await uploadHtmlToSSH(kerberos, password, pages,{publicationsData , portfolioData ,backgroundData ,teachingData});
     
     if (response.ok) {
      res.json('portfolio update success')

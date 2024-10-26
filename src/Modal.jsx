@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { usePortfolio } from './PortfolioContext';
+import Background from './Background';
 
 
 function Modal({ setShowModal, handleFunction}) {
   const [kerberos, setKerberos] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const {portfolio ,publications } =usePortfolio();
+  const {portfolio ,publications , background , teaching } =usePortfolio();
 
   const handleModalSubmit = async () => {
     if (handleFunction) {
@@ -30,7 +31,9 @@ function Modal({ setShowModal, handleFunction}) {
             kerberos,
             password,
             portfolio,
-            publications
+            publications,
+            background,
+           teaching
           }),
         });
         console.log(response)

@@ -10,7 +10,7 @@ export const PortfolioProvider = ({ children }) => {
       profilePicture: null,
       backgroundImage: null,
     },
-    navigation: ['About', 'Research', 'Publications', 'Teaching', 'Projects'],
+    navigation: ['About', 'Research', 'Publications', 'Background','Teaching', 'Projects'],
     aboutMe: '',
     researchAdvisor: {
       name: '',
@@ -57,16 +57,29 @@ export const PortfolioProvider = ({ children }) => {
   });
   
   const [background, setBackground] = useState({
-    education: [
+    educationalBackground:[
       { degree: '', department: '', institution: '', year: '', details: '' }
     ],
+
+    achievements:[],
+
     workExperience: [
       { title: '', company: '', duration: '', location: '', description: '' }
     ],
+
     internships: [
       { role: '', company: '', duration: '', location: '', description: '' }
-    ]
-  });
+    ],
+
+    researchSkills:[{skill:'', description:''}], 
+    
+    otherSkills:[{skill:'', description:''}]
+  })
+  ;
+  const [teaching ,setTeaching]=useState ({
+    lectures: [],
+    mentorships: []
+  })
   
 
 
@@ -79,7 +92,9 @@ export const PortfolioProvider = ({ children }) => {
         publications,
         setPublications,
         background,
-        setBackground
+        setBackground,
+        teaching,
+        setTeaching
       }}
     >
       {children}
