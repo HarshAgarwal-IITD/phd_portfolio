@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { usePortfolio } from './PortfolioContext';
-import Background from './Background';
+
 
 
 function Modal({ setShowModal, handleFunction}) {
   const [kerberos, setKerberos] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const {portfolio ,publications , background , teaching } =usePortfolio();
+  const {portfolio ,publications , background , teaching , projects ,research ,images } =usePortfolio();
 
   const handleModalSubmit = async () => {
     if (handleFunction) {
@@ -21,21 +21,34 @@ function Modal({ setShowModal, handleFunction}) {
 
     }
     try {
-       
-        const response = await fetch('http://localhost:3000/updatePortfolio', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            kerberos,
-            password,
-            portfolio,
-            publications,
-            background,
-           teaching
-          }),
-        });
+      const formData = new FormData();
+
+  // Append other data to FormData
+  if (images && typeof images === 'object') {
+    Object.entries(images).forEach(([key, file]) => {
+      if (file instanceof File || file instanceof Blob) {
+        formData.append(key, file);
+      }
+    });
+  }
+
+  // Append credentials
+  formData.append('kerberos', kerberos);
+  formData.append('password', password);
+
+  // Append other data as JSON strings
+  formData.append('portfolio', JSON.stringify(portfolio));
+  formData.append('publications', JSON.stringify(publications));
+  formData.append('background', JSON.stringify(background));
+  formData.append('teaching', JSON.stringify(teaching));
+  formData.append('projects', JSON.stringify(projects));
+  formData.append('research', JSON.stringify(research));
+
+  const response = await fetch('http://localhost:3000/updatePortfolio', {
+    method: 'POST',
+    body: formData,
+  });
+
         console.log(response)
   
         const data = await response.json();
@@ -50,6 +63,7 @@ function Modal({ setShowModal, handleFunction}) {
           setMessage(data.error || 'Failed to update portfolio');
         }
       } catch (error) {
+        console.log(error)
         setMessage('An error occurred. Please try again.');
       }
 

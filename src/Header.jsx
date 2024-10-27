@@ -2,39 +2,57 @@ import React from "react";
 import { usePortfolio } from "./PortfolioContext";
 
 function Header(){
-    const {portfolio}=usePortfolio();
+    const {portfolio , images , setImages ,imageUrls}=usePortfolio();
     return(
         <>
+          
         <header style={{
             backgroundColor: '#f4f4f4',
-            backgroundImage: portfolio.header.backgroundImage ? URL.createObjectURL(portfolio.header.backgroundImage) : '',
+            backgroundImage: imageUrls.backgroundImage ? `url(${imageUrls.backgroundImage})` : '',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             color: '#333',
             textAlign: 'center',
-            padding: '2rem'
+            padding: '2rem',
+            minHeight:'200px',
+            maxHeight:'250px',
+
           }}>
-            {portfolio.header.profilePicture && (
-              <img 
-                src={URL.createObjectURL(portfolio.header.profilePicture)} 
-                alt={portfolio.header.name}
-                style={{
-                  width: '150px',
-                  height: '150px',
-                  borderRadius: '50%',
+            
+            {imageUrls.profilePictureUrl && (
+              // <img 
+              //   src={URL.createObjectURL(portfolio.header.profilePicture)} 
+              //   alt={portfolio.header.name}
+              //   style={{
+              //     width: '150px',
+              //     height: '150px',
+              //     borderRadius: '50%',
+              //     objectFit: 'cover',
+              //     margin: '0 auto'
+              //   }}
+              // />
+              
+                <div>
+                  <img src={imageUrls.profilePictureUrl} alt="Selected" style={{
+                 width: '150px',
+                 height: '150px',
+                   borderRadius: '50%',
                   objectFit: 'cover',
-                  margin: '0 auto'
-                }}
-              />
+                  margin: '0 '
+                  }}/>
+              
+                </div>
+              
             )}
-            <h1 style={{ fontSize: '2rem', marginTop: '1rem' }}>{portfolio.header.name || 'Your Name'}</h1>
-            <h2 style={{ fontSize: '1.5rem' }}>{portfolio.header.title || 'Your Title'}</h2>
+            <h1 style={{ fontSize: '2rem', marginTop: '0.5rem',color:'white' }}>{portfolio.header.name || 'Your Name'}</h1>
+
           </header>
           <nav style={{
             backgroundColor: '#f4f4f4',
             padding: '1rem',
             textAlign: 'center'
           }}>
+            
             {portfolio.navigation.map((item, index) => (
               <a 
                 key={index}

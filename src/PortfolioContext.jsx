@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState } from 'react';
+import backgroundImage from './assets/backgroundImage.jpg'
+
 
 const PortfolioContext = createContext();
 
-export const PortfolioProvider = ({ children }) => {
+
+export  const PortfolioProvider = ({ children }) => {
   const [portfolio, setPortfolio] = useState({
     header: {
       name: '',
-      title: '',
+ 
       profilePicture: null,
       backgroundImage: null,
     },
@@ -80,6 +83,31 @@ export const PortfolioProvider = ({ children }) => {
     lectures: [],
     mentorships: []
   })
+  const [projects ,setProjects]=useState ([]);
+  const [research, setResearch] = useState({
+    'Research Interests': [],
+    'PhD Thesis': [],
+    'Undergraduate Thesis': [],
+    'Research Projects': [],
+    'Term Papers': []
+  });
+ 
+ 
+  //  // Append the default background image to FormData
+  const [images, setImages] = useState(new FormData());
+
+  const setDefaultBackground= async()=>{
+    const response = await fetch(backgroundImage);
+        const blob = await response.blob();
+        const file = new File([blob], 'backgroundImage.jpg', { type: blob.type });
+  
+        const newFormData = new FormData();
+        newFormData.append('background', file); // Append the default background image to FormData
+        setImages(newFormData);
+  }
+
+  const [imageUrls, setImageUrls] = useState({'backgroundImage' :backgroundImage});
+ 
   
 
 
@@ -94,7 +122,15 @@ export const PortfolioProvider = ({ children }) => {
         background,
         setBackground,
         teaching,
-        setTeaching
+        setTeaching,
+        projects ,
+        setProjects,
+        research ,
+        setResearch , 
+        images , 
+        setImages ,
+        imageUrls ,
+        setImageUrls
       }}
     >
       {children}

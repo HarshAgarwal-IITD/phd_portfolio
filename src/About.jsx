@@ -4,9 +4,52 @@ import Modal from './Modal';
 import Header from './Header';
 import Footer from './Footer';
 
+
 export default function About() {
-  const { portfolio, setPortfolio } = usePortfolio();
+  const { portfolio, setPortfolio ,images ,setImages ,imageUrls , setImageUrls} = usePortfolio();
   const [showModal, setShowModal] = useState(false);
+ 
+
+
+  // Handle the file selection
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+     
+      // Generate preview URL
+      const url = URL.createObjectURL(file);
+      
+      setImageUrls((prev) => ({
+        ...prev,
+       'profilePictureUrl': url, // Update the profilePictureUrl with the new URL
+      }));
+      console.log(imageUrls);
+      const newFormData = new FormData(images); // Clone the existing FormData
+      newFormData.append('profilePicture', file); // Append the new profile picture
+    
+      setImages(newFormData); // Update the state with the new FormData
+      
+    }
+  };
+  const handleBackgroundChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+     
+      // Generate preview URL
+      const url = URL.createObjectURL(file);
+      
+      setImageUrls((prev) => ({
+        ...prev,
+       'backgroundImage': url, // Update the profilePictureUrl with the new URL
+      }));
+  
+
+      const newFormData = new FormData(images); // Clone the existing FormData
+      newFormData.append('backgroundImage', file); // Append the new profile picture
+      setImages(newFormData); // Update the state with the new FormData
+      
+    }
+  };
 
   const handleInputChange = (section, field, value) => {
     setPortfolio(prev => ({
@@ -49,22 +92,27 @@ export default function About() {
             onChange={e => handleInputChange('header', 'name', e.target.value)}
             style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
           />
-          <input
-            type="text"
-            placeholder="Title"
-            value={portfolio.header.title}
-            onChange={e => handleInputChange('header', 'title', e.target.value)}
-            style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
-          />
-          <input
+        
+
+           
+     
+    </div>
+
+          {/* <input
             type="file"
             onChange={e => handleInputChange('header', 'profilePicture', e.target.files[0])}
             style={{ marginBottom: '0.5rem' }}
-          />
-          <input
-            type="file"
-            onChange={e => handleInputChange('header', 'backgroundImage', e.target.files[0])}
-          />
+          /> */}
+         
+           <div className="image-upload">
+           <h3>Add profile image</h3>
+         <input type="file" accept="image/*" onChange={handleImageChange} />
+         <h3>Add background image</h3>
+         <input type="file" accept="image/*" onChange={handleBackgroundChange} />
+      
+
+         
+         
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
