@@ -3,117 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publications Template</title>
+    
     <style>
-        /* Reset default margin and padding, set height to full screen */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%; /* Ensure full viewport height */
-            width: 100%; /* Ensure full viewport width */
-            overflow-x: hidden; /* Disable horizontal scrolling */
-            font-family: Arial, sans-serif;
-        }
-
-        /* Body and container */
         body {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Ensures footer stays at the bottom */
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Header */
-        header {
-            text-align: center;
-            padding: 2rem;
-            background-color: #f9f9f9;
-            width: 100%;
-            box-sizing: border-box;
-            min-height:'250px',
-        }
-
-        header h1 {
-            font-size: 24px;
-            margin: 0;
-            margin-bottom: 0.5rem;
-        }
-
-        header h2 {
-            font-size: 18px;
-            font-weight: normal;
-            margin: 0;
-        }
-
-        /* Navigation */
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            padding: 1rem;
-            background-color: #f9f9f9;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        nav a {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
             color: #333;
-            text-decoration: none;
-        }
-
-        /* Container */
-        .container {
+            margin: 0;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: stretch;
-            flex: 1; /* Take up all available space */
-            padding: 0 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            overflow-y: auto; /* Enable vertical scrolling if necessary */
+            min-height: 100vh;
         }
 
-        .content {
-            width: 100%;
-            
+        main {
+            flex: 1;
             padding: 2rem;
-            box-sizing: border-box;
-            flex: 1; /* Ensure the content area grows to fill the space */
-            
-        }
-
-        .main-content {
-            padding: 2rem;
-            width: 100%;
+            background-color: #f9f9f9;
         }
 
         .section {
-            min-height: 100px;
-            margin-top: 2rem;
+            max-width: 1000px;
+            margin: 0 auto 3rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
         }
 
-        h2 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+        .section h2 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
         }
 
-        p {
-            margin-bottom: 1rem;
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: #3498db;
+        }
+
+        /* Publication item styling */
+        .publication-item {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .publication-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .publication-item:last-child {
+            margin-bottom: 0;
         }
 
         a {
-            color: #007bff;
+            color: #2980b9;
             text-decoration: none;
+            transition: color 0.2s ease;
         }
 
-        /* Footer */
+        a:hover {
+            color: #3498db;
+            text-decoration: underline;
+        }
+
+        /* Keeping existing footer styles */
         footer {
             background-color: #333;
             color: white;
@@ -121,8 +86,6 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
-            width: 100%;
-            box-sizing: border-box;
         }
 
         footer h3 {
@@ -141,29 +104,57 @@
             display: block;
             margin-bottom: 0.5rem;
         }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+                margin: 0 1rem 2rem 1rem;
+            }
+
+            .section h2 {
+                font-size: 24px;
+            }
+
+            .publication-item {
+                padding: 1rem;
+            }
+
+            footer {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            footer {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-  {header}
-    <!-- Main Container -->
-    <div class="container">
-        <div class="content">
-            <div class="main-content">
+    {header}
 
-                <div class="section" id="journals">
-                    <h2>Journals</h2>
-                   {journal}
-                </div>
-
-                <div class="section" id="conferences">
-                    <h2>Conferences</h2>
-                    {conference}
-                </div>
+    <main>
+        <section class="section" id="journals">
+            <h2>Journals</h2>
+            <div class="publication-list">
+                {journal}
             </div>
-        </div>
-    </div>
+        </section>
 
-   {footer}
-      
+        <section class="section" id="conferences">
+            <h2>Conferences</h2>
+            <div class="publication-list">
+                {conference}
+            </div>
+        </section>
+    </main>
+
+    {footer}
 </body>
 </html>

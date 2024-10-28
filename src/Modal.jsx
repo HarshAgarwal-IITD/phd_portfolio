@@ -23,16 +23,11 @@ function Modal({ setShowModal, handleFunction}) {
     try {
       const formData = new FormData();
 
-  // Append other data to FormData
-  if (images && typeof images === 'object') {
-    Object.entries(images).forEach(([key, file]) => {
-      if (file instanceof File || file instanceof Blob) {
-        formData.append(key, file);
-      }
-    });
-  }
-
-  // Append credentials
+      if (images) {
+        for (let [key, value] of images.entries()) {
+          formData.append(key, value);
+        }
+      } 
   formData.append('kerberos', kerberos);
   formData.append('password', password);
 
@@ -43,6 +38,7 @@ function Modal({ setShowModal, handleFunction}) {
   formData.append('teaching', JSON.stringify(teaching));
   formData.append('projects', JSON.stringify(projects));
   formData.append('research', JSON.stringify(research));
+  console.log(formData)
 
   const response = await fetch('http://localhost:3000/updatePortfolio', {
     method: 'POST',

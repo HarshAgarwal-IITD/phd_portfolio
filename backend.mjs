@@ -6,7 +6,45 @@ import { execa } from 'execa';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-const upload = multer({ dest: './uploads/' });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Your upload directory
+  },
+  filename: function (req, file, cb) {
+    // Get the file extension
+    const fileExt = path.extname(file.originalname);
+   
+    
+    // Create filename: timestamp + original extension
+    const uniqueFilename = `${file.fieldname}${fileExt}`;
+    
+ ;
+    
+    cb(null, uniqueFilename);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  // Accept images only
+  if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+    req.fileValidationError = 'Only image files are allowed!';
+    return cb(new Error('Only image files are allowed!'), false);
+  }
+  cb(null, true);
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+}).fields([
+  { name: 'profilePicture', maxCount: 1 },
+  { name: 'backgroundImage', maxCount: 1 }
+]);
+
 
 
 // Convert import.meta.url to a file path
@@ -152,7 +190,7 @@ async function createBackgroundPage(backgroundData, header, footer) {
       ` : ''}
    
   ` || '<p>No skills listed yet.</p>';
-  console.log(skillsHtml)
+ 
 
   // Replace all placeholders in the template
   return backgroundTemplate
@@ -340,6 +378,8 @@ async function createHeader(headerData){
 
 return  headerTemplate
 .replace(/{{NAME}}/g, headerData.name || 'Your Name')
+.replace('{{BACKGROUNDIMAGE}}',`url(./assets/${headerData.backgroundImage})`)
+.replace('{{PROFILEPICTURE}}',`./assets/${headerData.profilePicture}`)
 
 
 }
@@ -392,128 +432,126 @@ async function getCurrentJson(kerberosId , password){
     }
   }
   
+ 
+  
+  
+  class SSHUploader {
+    constructor(kerberosId, password) {
+      this.kerberosId = kerberosId;
+      this.password = password;
+      this.sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
+      this.scpBaseCommand = `sshpass -p "${password}" scp`;
+      this.remoteBasePath = '~/private_html';
+    }
+  
+    async executeSSHCommand(command, errorMessage = 'SSH command failed') {
+      try {
+        const { stdout, stderr } = await execa(command, { shell: true });
+        if (stderr) {
+          console.error(`Error: ${stderr}`);
+        }
+        return stdout;
+      } catch (error) {
+        throw new Error(`${errorMessage}: ${error.message}`);
+      }
+    }
+  
+    async uploadFile(localPath, remotePath) {
+      const scpCommand = `${this.scpBaseCommand} ${localPath} ${this.kerberosId}@ssh1.iitd.ac.in:${this.remoteBasePath}/${remotePath}`;
+      return this.executeSSHCommand(scpCommand, `Failed to upload ${remotePath}`);
+    }
+  
+    async writeAndUploadFile(content, filename) {
+      const tempFilePath = path.join(__dirname, `temp_${filename}`);
+      try {
+        await fs.writeFile(tempFilePath, content, 'utf8');
+        await this.uploadFile(tempFilePath, filename);
+      } finally {
+        try {
+          await fs.unlink(tempFilePath);
+        } catch (error) {
+          console.error(`Failed to delete temporary file ${tempFilePath}:`, error);
+        }
+      }
+    }
+  
+    async uploadAsset(localPath, remoteFilename) {
+      await this.uploadFile(localPath, `assets/${remoteFilename}`);
+    }
+  
+    async initializeDirectory() {
+      await this.executeSSHCommand(
+        `${this.sshCommand} "cd ~ && mkdir -p ${this.remoteBasePath}/assets"`,
+        'Failed to initialize directory structure'
+      );
+    }
+  }
+  
   async function uploadHtmlToSSH(kerberosId, password, pages, jsonData) {
+    const uploader = new SSHUploader(kerberosId, password);
+    
     try {
-      // Prepare SSH connection details
-      const sshCommand = `sshpass -p "${password}" ssh ${kerberosId}@ssh1.iitd.ac.in`;
+      console.log('Starting upload process...');
   
-      console.log('Processing...');
+      // Initialize directory structure
+      await uploader.initializeDirectory();
   
-      // Create directory and upload HTML files
-      const { stdout: sshOutput, stderr: sshError } = await execa(
-        `${sshCommand} "cd ~ && mkdir -p private_html && cd private_html && touch index.html && echo '${pages.aboutPage}' > index.html && touch publications.html && echo '${pages.publicationsPage}' > publications.html
-       " ` ,
-        { shell: true }
+      // Define page uploads
+      const pageUploads = [
+        { content: pages.aboutPage, filename: 'index.html' },
+        { content: pages.publicationsPage, filename: 'publications.html' },
+        { content: pages.backgroundPage, filename: 'background.html' },
+        { content: pages.teachingPage, filename: 'teaching.html' },
+        { content: pages.projectsPage, filename: 'projects.html' },
+        { content: pages.researchPage, filename: 'research.html' }
+      ];
+  
+      // Upload all pages in parallel
+      await Promise.all(
+        pageUploads.map(({ content, filename }) =>
+          uploader.writeAndUploadFile(content, filename)
+        )
       );
-      console.log(sshOutput); // For debugging
   
-      if (sshError) {
-        console.error(sshError);
-      }
-      const { stdout: sshOutput1, stderr: sshError1 } = await execa(
-        `${sshCommand} "cd ~ && mkdir -p private_html && touch publications.html && echo '${pages.publicationsPage}' > publications.html
-       " ` ,
-        { shell: true }
+      // Upload JSON data
+      const jsonDataString = JSON.stringify(jsonData);
+      await uploader.executeSSHCommand(
+        `${uploader.sshCommand} "cd ${uploader.remoteBasePath} && echo '${jsonDataString.replace(/"/g, '\\"')}' > jsonData.json"`,
+        'Failed to upload JSON data'
       );
   
-     
-      console.log(sshOutput1); // For debugging
-  
-      if (sshError1) {
-        console.error(sshError1);
-      }
-
-      let tempFilePath = path.join(__dirname, 'backgroundOutput.html');
-      await fs.writeFile(tempFilePath, pages.backgroundPage, 'utf8');
-  
-      // Use scp to transfer the file to the remote server
-      let scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/background.html`;
-      const { stdout: sshOutput2, stderr: sshError2 }= await execa(scpCommand, { shell: true });
-      
-  
-     
-      console.log(sshOutput2); // For debugging
-  
-      if (sshError2) {
-        console.error(sshError2);
-      }
-
-      //upload teaching page
-  
-       tempFilePath = path.join(__dirname, 'teachingOutput.html');
-      await fs.writeFile(tempFilePath, pages.teachingPage, 'utf8');
-  
-      // Use scp to transfer the file to the remote server
-       scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/teaching.html`;
-      const { stdout: sshOutput3, stderr: sshError3 }= await execa(scpCommand, { shell: true });
-      
-  
-     
-      console.log(sshOutput3); // For debugging
-  
-      if (sshError3) {
-        console.error(sshError3);
-      }
-
-      //create projectsPage
-       tempFilePath = path.join(__dirname, 'projectsOutput.html');
-      await fs.writeFile(tempFilePath, pages.projectsPage, 'utf8');
-  
-      // Use scp to transfer the file to the remote server
-       scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/projects.html`;
-      const { stdout: sshOutput4, stderr: sshError4 }= await execa(scpCommand, { shell: true });
-      
-  
-     
-      console.log(sshOutput4); // For debugging
-  
-      if (sshError4) {
-        console.error(sshError4);
-      }
-
-
-      //create reserachPage
-       tempFilePath = path.join(__dirname, 'researchOutput.html');
-      await fs.writeFile(tempFilePath, pages.researchPage, 'utf8');
-  
-      // Use scp to transfer the file to the remote server
-       scpCommand = `sshpass -p "${password}" scp ${tempFilePath} ${kerberosId}@ssh1.iitd.ac.in:~/private_html/research.html`;
-      const { stdout: sshOutput5, stderr: sshError5 }= await execa(scpCommand, { shell: true });
-      
-  
-     
-      console.log(sshOutput4); // For debugging
-  
-      if (sshError4) {
-        console.error(sshError4);
-      }
-      console.log('HTML files uploaded successfully to the SSH server.');
-  
-      // 2. Convert jsonData to a JSON string format
-      const jsonDataString = JSON.stringify(jsonData).replace(/"/g, '\\"').replace(/\n/g, '\\n');
-  
-      // Prepare the command to upload JSON data
-
-  
-      // Execute the command to upload JSON file
-      const { stdout: jsonStdout, stderr: jsonStderr } = await execa(
-         `${sshCommand} "cd ~/private_html && 
-        echo '${jsonDataString}' > jsonData.json "`,
-        { shell: true }
+      // Clean up existing assets directory
+      await uploader.executeSSHCommand(
+        `${uploader.sshCommand} "cd ${uploader.remoteBasePath} && rm -rf assets && mkdir -p assets"`,
+        'Failed to clean up assets directory'
       );
-      console.log(jsonStdout); // For debugging
   
-      if (jsonStderr) {
-        console.error(jsonStderr);
-      }
+      // Upload images
+      const imagesToUpload = [
+        { path: `uploads/${jsonData.profilePicture}`, filename: jsonData.profilePicture },
+        { path: `uploads/${jsonData.backgroundImage}`, filename: jsonData.backgroundImage }
+      ];
   
-      console.log('jsonData.json file uploaded successfully to the SSH server.');
+      await Promise.all(
+        imagesToUpload.map(({ path: localPath, filename }) =>
+          uploader.uploadAsset(localPath, filename)
+        )
+      );
+  
+      // Clean up local image files
+      await Promise.all(
+        imagesToUpload.map(({ path }) => fs.unlink(path))
+      );
+  
+      console.log('Upload process completed successfully');
       return { ok: true };
+  
     } catch (error) {
       console.error('Error during SSH upload:', error.message);
       return { ok: false, error: error.message };
     }
   }
+  
  
   
 
@@ -534,10 +572,12 @@ app.post('/login', async (req ,res)=>{
 
 })
 
-app.post('/updatePortfolio',upload.any(), async (req, res) => {
-  console.log(req.body , typeof req.body)
+app.post('/updatePortfolio',upload, async (req, res) => {
+
   try {
     const images = req.files;
+   
+    
     const portfolioData = JSON.parse(req.body.portfolio || '{}');
     const publicationsData = JSON.parse(req.body.publications || '{}');
     const backgroundData  = JSON.parse(req.body.background || '{}');
@@ -549,7 +589,7 @@ app.post('/updatePortfolio',upload.any(), async (req, res) => {
 
     // Ensure all these functions return promises
     const [header, footer] = await Promise.all([
-      createHeader({name: portfolioData.header.name}),
+      createHeader({name: portfolioData.header.name ,profilePicture:images.profilePicture[0].filename ,backgroundImage:images.backgroundImage[0].filename}),
       createFooter({
         researchAdvisor: portfolioData.researchAdvisor,
         researchLab: portfolioData.researchLab,
@@ -574,8 +614,9 @@ app.post('/updatePortfolio',upload.any(), async (req, res) => {
     
 
     // Upload HTML and images to SSH server
+    console.log(images.profilePicture[0])
     const response = await uploadHtmlToSSH(kerberos, password, pages,{publicationsData , portfolioData ,
-      backgroundData ,teachingData ,projectsData ,researchData});
+      backgroundData ,teachingData ,projectsData ,researchData , profilePicture:images.profilePicture[0].filename ,backgroundImage:images.backgroundImage[0].filename});
     
     if (response.ok) {
      res.json('portfolio update success')

@@ -1,14 +1,66 @@
-<header>
-    <h1>{{NAME}}</h1>
-   
+<header style="
+    background-image: {{BACKGROUNDIMAGE}};
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    max-height: 350px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f9f9f9;
+">
+    <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    ">
+        <img src='{{PROFILEPICTURE}}' style="
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        "/>
+        <h1 style="
+            color: whitesmoke;
+            margin: 0;
+            margin-bottom: 0.5rem;
+            font-size: 30px;
+            text-align: center;
+        ">{{NAME}}</h1>
+    </div>
+
+    <div style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.1);
+        z-index: 1;
+    "></div>
 </header>
 
-<nav>
-    <a href="./index.html">About</a>
-    <a href="./publications.html">Publications</a>
-    <a href="./background.html">Background</a>
-
-    <a href="./research">Research</a>
-    <a href="./teaching.html">Teaching</a>
-    <a href="./projects.html">Projects</a>
+<nav style="
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+">
+    <a href="./index.html" style="color: #333; text-decoration: none;">About</a>
+    <a href="./publications.html" style="color: #333; text-decoration: none;">Publications</a>
+    <a href="./background.html" style="color: #333; text-decoration: none;">Background</a>
+    <a href="./research" style="color: #333; text-decoration: none;">Research</a>
+    <a href="./teaching.html" style="color: #333; text-decoration: none;">Teaching</a>
+    <a href="./projects.html" style="color: #333; text-decoration: none;">Projects</a>
 </nav>

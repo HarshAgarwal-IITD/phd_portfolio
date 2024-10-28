@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{NAME}} - PhD Portfolio</title>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,40 +11,48 @@
             color: #333;
             margin: 0;
         }
-        header {
-            text-align: center;
-            padding: 2rem;
-            background-color: #f9f9f9;
-            min-height:'250px',
-        }
-        header h1 {
-            font-size: 24px;
-            margin: 0;
-            margin-bottom: 0.5rem;
-        }
-        header h2 {
-            font-size: 18px;
-            font-weight: normal;
-            margin: 0;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            padding: 1rem;
-            background-color: #f9f9f9;
-        }
-        nav a {
-            color: #333;
-            text-decoration: none;
-        }
+        
         main {
             padding: 2rem;
+            background-color: #f9f9f9;
         }
-        main h2 {
-            font-size: 20px;
-            margin-bottom: 1rem;
+
+        #about {
+            min-height: 500px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
         }
+
+        #about h2 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        #about h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: #3498db;
+        }
+
+        #about p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Keeping existing footer styles */
         footer {
             background-color: #333;
             color: white;
@@ -53,27 +61,49 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
         }
+
         footer h3 {
             font-size: 18px;
             margin-bottom: 1rem;
         }
+
         footer p {
             margin: 0;
             margin-bottom: 0.5rem;
         }
+
         footer a {
             color: white;
             text-decoration: none;
             display: block;
             margin-bottom: 0.5rem;
         }
-        #about{
-            min-height: 500px;
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #about {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            #about h2 {
+                font-size: 24px;
+            }
+
+            footer {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            footer {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-   {{HEADER}}
+    {{HEADER}}
     
     <main>
         <section id="about">
@@ -82,8 +112,6 @@
         </section>
     </main>
     
-   {{FOOTER}}
+    {{FOOTER}}
 </body>
 </html>
-
-

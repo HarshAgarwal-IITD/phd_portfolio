@@ -23,11 +23,22 @@ export default function About() {
         ...prev,
        'profilePictureUrl': url, // Update the profilePictureUrl with the new URL
       }));
-      console.log(imageUrls);
-      const newFormData = new FormData(images); // Clone the existing FormData
-      newFormData.append('profilePicture', file); // Append the new profile picture
-    
+      const newFormData = new FormData();
+      if (images) {
+        for (let [key, value] of images.entries()) {
+          if (key == 'profilePicture')
+          {
+            continue;
+          }
+          newFormData.append(key, value);
+        }
+      }
+      
+      // Append the new file
+      newFormData.append('profilePicture', file);
+
       setImages(newFormData); // Update the state with the new FormData
+      console.log(images)
       
     }
   };
@@ -44,9 +55,25 @@ export default function About() {
       }));
   
 
-      const newFormData = new FormData(images); // Clone the existing FormData
+      const newFormData = new FormData(); // Clone the existing FormData
+      if (images) {
+        for (let [key, value] of images.entries()) {
+          if (key == 'backgroundImage')
+          {
+            continue;
+          }
+          newFormData.append(key, value);
+        }
+      }
+      
+      // Append the new file
+  
       newFormData.append('backgroundImage', file); // Append the new profile picture
       setImages(newFormData); // Update the state with the new FormData
+      newFormData.forEach((value, key) => {
+        console.log(key, value);
+      });
+      console.log(imageUrls)
       
     }
   };
