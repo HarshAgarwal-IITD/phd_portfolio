@@ -7,6 +7,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/'); // Your upload directory
@@ -373,12 +374,17 @@ async function creatPublicationsPage(header , footer ,publicationsData){
 async function createHeader(headerData){
   let headerTemplate =await fs.readFile(HEADER_PATH , 'utf-8');
 
- 
-
+let backgroundImage;
+if(!headerData.backgroundImage){
+  backgroundImage='backgroundImage.jpg'
+}
+else{
+  backgroundImage= headerData.backgroundImage;
+}
 
 return  headerTemplate
 .replace(/{{NAME}}/g, headerData.name || 'Your Name')
-.replace('{{BACKGROUNDIMAGE}}',`url(./assets/${headerData.backgroundImage})`)
+.replace('{{BACKGROUNDIMAGE}}',`url(./assets/${backgroundImage})`)
 .replace('{{PROFILEPICTURE}}',`./assets/${headerData.profilePicture}`)
 
 
@@ -428,8 +434,12 @@ async function getCurrentJson(kerberosId , password){
       return { ok: true, data: jsonData };
     } catch (error) {
       console.error('Error during SSH fetch:', error.message);
+    
       return { ok: false, error: error.message };
     }
+    //fetch images
+
+
   }
   
  
@@ -527,10 +537,20 @@ async function getCurrentJson(kerberosId , password){
       );
   
       // Upload images
-      const imagesToUpload = [
-        { path: `uploads/${jsonData.profilePicture}`, filename: jsonData.profilePicture },
-        { path: `uploads/${jsonData.backgroundImage}`, filename: jsonData.backgroundImage }
-      ];
+      const imagesToUpload = [];
+
+      if (jsonData.profilePicture) {
+        imagesToUpload.push({ path: `uploads/${jsonData.profilePicture}`, filename: jsonData.profilePicture });
+      }
+      
+      if (jsonData.backgroundImage) {
+        imagesToUpload.push({ path: `uploads/${jsonData.backgroundImage}`, filename: jsonData.backgroundImage });
+      }
+      else{
+        imagesToUpload.push({ path: `src/assets/backgroundImage.jpg`, filename: 'backgroundImage.jpg' });
+      }
+     
+      console.log(imagesToUpload)
   
       await Promise.all(
         imagesToUpload.map(({ path: localPath, filename }) =>
@@ -540,7 +560,12 @@ async function getCurrentJson(kerberosId , password){
   
       // Clean up local image files
       await Promise.all(
-        imagesToUpload.map(({ path }) => fs.unlink(path))
+        imagesToUpload.map(({ path }) => {
+          if (path !== "src/assets/backgroundImage.jpg") {
+            return fs.unlink(path);
+          }
+          return Promise.resolve();
+        })
       );
   
       console.log('Upload process completed successfully');
@@ -556,9 +581,10 @@ async function getCurrentJson(kerberosId , password){
   
 
 
-app.post('/login', async (req ,res)=>{
+app.post('/login',express.json(), async (req ,res)=>{
  
   const {kerberos , password} = req.body;
+  console.log(kerberos , password)
 
   const response =await getCurrentJson(kerberos, password);
  
@@ -576,6 +602,7 @@ app.post('/updatePortfolio',upload, async (req, res) => {
 
   try {
     const images = req.files;
+    console.log(images);
    
     
     const portfolioData = JSON.parse(req.body.portfolio || '{}');
@@ -586,10 +613,19 @@ app.post('/updatePortfolio',upload, async (req, res) => {
     const researchData  = JSON.parse(req.body.research || '{}');
     const kerberos  = req.body.kerberos;
     const password  = req.body.password;
+    let background, profile;
+    if(images.backgroundImage){
+      background=images.backgroundImage[0].filename;
 
+    }
+    
+ 
+    if(images.profilePicture){
+      profile = images.profilePicture[0].filename;
+    }
     // Ensure all these functions return promises
     const [header, footer] = await Promise.all([
-      createHeader({name: portfolioData.header.name ,profilePicture:images.profilePicture[0].filename ,backgroundImage:images.backgroundImage[0].filename}),
+      createHeader({name: portfolioData.header.name ,profilePicture:profile , backgroundImage:background}),
       createFooter({
         researchAdvisor: portfolioData.researchAdvisor,
         researchLab: portfolioData.researchLab,
@@ -614,9 +650,9 @@ app.post('/updatePortfolio',upload, async (req, res) => {
     
 
     // Upload HTML and images to SSH server
-    console.log(images.profilePicture[0])
+  
     const response = await uploadHtmlToSSH(kerberos, password, pages,{publicationsData , portfolioData ,
-      backgroundData ,teachingData ,projectsData ,researchData , profilePicture:images.profilePicture[0].filename ,backgroundImage:images.backgroundImage[0].filename});
+      backgroundData ,teachingData ,projectsData ,researchData ,profilePicture: profile , backgroundImage: background});
     
     if (response.ok) {
      res.json('portfolio update success')

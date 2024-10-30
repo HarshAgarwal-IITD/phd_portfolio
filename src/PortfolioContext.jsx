@@ -95,17 +95,6 @@ export  const PortfolioProvider = ({ children }) => {
  
   //  // Append the default background image to FormData
   const [images, setImages] = useState(new FormData());
-
-  const setDefaultBackground= async()=>{
-    const response = await fetch(backgroundImage);
-        const blob = await response.blob();
-        const file = new File([blob], 'backgroundImage.jpg', { type: blob.type });
-  
-        const newFormData = new FormData();
-        newFormData.append('background', file); // Append the default background image to FormData
-        setImages(newFormData);
-  }
-
   const [imageUrls, setImageUrls] = useState({'backgroundImage' :backgroundImage});
  
   

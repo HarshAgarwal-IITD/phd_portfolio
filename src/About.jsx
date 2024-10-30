@@ -38,8 +38,7 @@ export default function About() {
       newFormData.append('profilePicture', file);
 
       setImages(newFormData); // Update the state with the new FormData
-      console.log(images)
-      
+     
     }
   };
   const handleBackgroundChange = (event) => {
@@ -132,9 +131,9 @@ export default function About() {
           /> */}
          
            <div className="image-upload">
-           <h3>Add profile image</h3>
+           <h3>Add profile image (limit 5mb)</h3>
          <input type="file" accept="image/*" onChange={handleImageChange} />
-         <h3>Add background image</h3>
+         <h3>Add background image (limit 5mb)</h3>
          <input type="file" accept="image/*" onChange={handleBackgroundChange} />
       
 

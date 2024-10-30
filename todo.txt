@@ -1,8 +1,6 @@
-done- created publications page
-done - created header footer and environment portfolio
-done -login functionality and routing of pages
+todo- complete footer section , researchGate and contacht
+todo- image fetch on login
+todo - changes suggested by dushyant sir
 
-done- connect backend for publications
-todo-upload json for publications 
-todo-fetch publications data for login
-todo - create other pages
+done-unresponsive pages
+done - if no image upload handler
